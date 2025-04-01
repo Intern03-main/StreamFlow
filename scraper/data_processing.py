@@ -14,7 +14,7 @@ def scrape_current_page(page, scraper):
 
     print(f"[INFO] Found {total_years} year links. Scraping 3 available...")
 
-    for i in range(min(2, total_years)):  # Scrape 3 year links per page
+    for i in range(min(15, total_years)):  # Scrape 15 year links per page
         try:
             year_links = page.locator("a[href*='station_daily.aspx']")
             current_year_link = year_links.nth(i)
