@@ -1,25 +1,22 @@
 import time
-from scraper.config import RETRY_ATTEMPTS, WAIT_TIME
 from scraper.connection import is_connected, wait_for_connection
 
 
-def safe_page_goto(page, url, retries=RETRY_ATTEMPTS, wait_time=WAIT_TIME):
-    """Attempts to load a page with retries if internet fails."""
-    attempt = 0
-    while attempt < retries:
+def safe_page_goto(page, url, wait_time=10):
+    """Attempts to load a page and waits indefinitely until it succeeds."""
+    attempt = 1
+    while True:
         try:
-            print(f"[INFO] Loading {url}... (Attempt {attempt + 1}/{retries})")
-            page.goto(url, timeout=30000, wait_until="domcontentloaded")
-            page.wait_for_load_state("load")
-            time.sleep(3)
-            return
+            print(f"[INFO] Loading {url}... (Attempt {attempt})")
+            page.goto(url, timeout=60000, wait_until="load")  # Set longer timeout (60s)
+            page.wait_for_load_state("networkidle")  # Wait until all network requests are done
+            print("[INFO] Page loaded successfully!")
+            return  # Exit loop once successful
         except Exception as e:
             print(f"[WARNING] Failed to load page: {e}")
-            attempt += 1
-            time.sleep(wait_time)
-
-    print("[ERROR] All attempts to load the page failed. Exiting...")
-    raise Exception("Failed to load page after multiple retries.")
+            print(f"[INFO] Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)  # Wait before retrying
+            attempt += 1  # Increment attempt count
 
 
 
