@@ -19,18 +19,33 @@ def safe_page_goto(page, url, wait_time=10):
             attempt += 1  # Increment attempt count
 
 
-
 def return_to_correct_page(page, scraper):
     """Ensures the scraper returns to the correct page after reconnection."""
     print(f"[INFO] Returning to page {scraper.current_page_number} after reconnection...")
 
     scraper.safe_page_goto(page, scraper.base_url)
-    time.sleep(3)
+    time.sleep(3)  # Allow initial page load
 
-    # Get total pages in DataTable
-    total_pages = page.evaluate("$('#tbstations').DataTable().page.info().pages")
+    # Ensure the DataTable is fully initialized before proceeding
+    for attempt in range(5):  # Retry up to 5 times
+        total_pages = page.evaluate("$('#tbstations').DataTable().page.info()?.pages || 0")
+        total_rows = page.evaluate("$('#tbstations tbody tr').length")
 
-    # Get the current page
+        if total_pages > 0 and total_rows > 0:
+            break  # Table is loaded properly
+        print(f"[WARNING] DataTable not loaded yet, retrying... ({attempt + 1}/5)")
+        time.sleep(2)
+
+    # Re-fetch total pages after waiting
+    total_pages = page.evaluate("$('#tbstations').DataTable().page.info()?.pages || 0")
+    total_rows = page.evaluate("$('#tbstations tbody tr').length")
+
+    if total_pages == 0 or total_rows == 0:
+        print("[CRITICAL] DataTable is empty or not initialized. Trying to reload the page...")
+        page.reload()
+        time.sleep(3)  # Allow page reload
+        return return_to_correct_page(page, scraper)  # Retry after reload
+
     current_page = page.evaluate("$('#tbstations').DataTable().page.info().page + 1")
 
     if current_page == scraper.current_page_number:
@@ -44,7 +59,6 @@ def return_to_correct_page(page, scraper):
         print(f"[INFO] Successfully navigated to page {scraper.current_page_number}.")
     else:
         print(f"[ERROR] Requested page {scraper.current_page_number} exceeds available pages ({total_pages}).")
-
 
 
 def click_next_page(page, scraper):

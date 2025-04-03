@@ -11,8 +11,7 @@ def scrape_current_page(page, scraper):
     if total_years == 0:
         print("[ERROR] No year links found.")
         return
-
-    print(f"[INFO] Found {total_years} year links. Scraping 3 available...")
+    print(f"[INFO] Found {total_years} year links. Scraping 20 available...")
 
     for i in range(min(20, total_years)):  # Scrape 20 year links per page
         try:
@@ -35,21 +34,40 @@ def scrape_current_page(page, scraper):
             return_to_correct_page(page, scraper)
 
 
-def scrape_data(page, scraper):
+MAX_RETRIES = 3  # Number of times to wait for the table before reloading
+MAX_RELOADS = 3  # Maximum times to reload the page
+
+
+def scrape_data(page, scraper, reload_attempts=0):
     """Extracts data from the table while handling empty cells properly."""
     try:
+        for attempt in range(MAX_RETRIES):
+            table = page.locator("table.mystyle tbody")
+            if table.count():
+                break  # Table found, proceed with scraping
+            print(f"[WARNING] Table not found. Retrying... ({attempt + 1}/{MAX_RETRIES})")
+            time.sleep(2)  # Wait before retrying
+
+        # If table still not found, reload the page
         table = page.locator("table.mystyle tbody")
         if not table.count():
-            print("[ERROR] Table not found. Skipping...")
-            return
+            if reload_attempts < MAX_RELOADS:
+                print(f"[ERROR] Table still not found. Reloading page... ({reload_attempts + 1}/{MAX_RELOADS})")
+                page.reload()
+                time.sleep(3)  # Wait for page to load
+                return scrape_data(page, scraper, reload_attempts + 1)  # Retry after reload
+            else:
+                print("[CRITICAL] Table not found after multiple reloads. Manual intervention needed.")
+                return  # Prevent infinite loop
 
+        # Extract headers and month names
         rows = table.locator("tr")
         headers = rows.locator("th").all_text_contents()
         months = [h for h in headers if h not in ["Q", "Day"]]
 
         if not months:
-            print("[ERROR] No valid headers found. Skipping...")
-            return
+            print("[ERROR] No valid headers found. Retrying...")
+            return scrape_data(page, scraper, reload_attempts)
 
         # Extract station ID
         station_id_locator = page.locator("tr[valign='top'] td:has-text('STATION ID:') + td")

@@ -1,6 +1,7 @@
 import time
 import socket
 
+
 def wait_for_connection(url, page):
     """Wait for an internet connection and reload the page when active."""
     while not is_connected():
@@ -10,6 +11,7 @@ def wait_for_connection(url, page):
     print("[INFO] Internet connection restored. Reloading page...")
     safe_page_goto(page, url)
 
+
 def is_connected(host="8.8.8.8", port=53, timeout=3):
     """Check if the internet connection is active."""
     try:
@@ -18,6 +20,7 @@ def is_connected(host="8.8.8.8", port=53, timeout=3):
         return True
     except OSError:
         return False
+
 
 def safe_page_goto(page, url, retries=5, wait_time=10):
     """Load a page with retries if internet fails."""
