@@ -12,6 +12,7 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
+
 # Create connection to MySQL
 def create_connection():
     """Establish a connection to the MySQL database."""
@@ -28,6 +29,7 @@ def create_connection():
     except Error as e:
         print(f"[ERROR] Error connecting to MySQL: {e}")
         return None
+
 
 # Create table if not exists
 def create_table():
@@ -56,6 +58,7 @@ def create_table():
     finally:
         cursor.close()
         connection.close()
+
 
 # Insert data into the table
 def insert_data(data):

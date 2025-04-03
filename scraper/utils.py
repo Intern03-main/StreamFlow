@@ -18,7 +18,7 @@ def save_to_excel(data):
     filepath = os.path.join(output_dir, filename)
 
     # Save the data
-    df = pd.DataFrame(data, columns=["Station ID", "Date", "Q (m³/s)"])
+    df = pd.DataFrame(data, columns=["Station ID", "Date", "Q"])
     df.to_excel(filepath, index=False)
 
     print(f"[INFO] Data saved to {filepath}")
