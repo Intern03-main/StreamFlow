@@ -33,14 +33,15 @@ def create_connection():
 
 # Create table if not exists
 def create_table():
-    """Create the streamflow_data table if it does not exist."""
+    """Drop existing streamflow_data table and create a new one."""
     connection = create_connection()
     if connection is None:
         print("[ERROR] Failed to create database connection.")
         return
 
+    drop_table_query = "DROP TABLE IF EXISTS streamflow_data"
     create_table_query = """
-    CREATE TABLE IF NOT EXISTS streamflow_data (
+    CREATE TABLE streamflow_data (
         id INT AUTO_INCREMENT PRIMARY KEY,
         station_id VARCHAR(255),
         date DATE,
@@ -50,11 +51,12 @@ def create_table():
 
     try:
         cursor = connection.cursor()
+        cursor.execute(drop_table_query)
         cursor.execute(create_table_query)
         connection.commit()
-        print("[INFO] Table 'streamflow_data' is ready.")
+        print("[INFO] Dropped and recreated 'streamflow_data' table.")
     except Error as e:
-        print(f"[ERROR] Failed to create table: {e}")
+        print(f"[ERROR] Failed to drop/create table: {e}")
     finally:
         cursor.close()
         connection.close()

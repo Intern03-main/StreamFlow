@@ -9,8 +9,8 @@ def save_to_csv(data):
         print("[ERROR] No data to save.")
         return
 
-    # Create the directory if it doesn't exist
-    output_dir = "Daily_Discharge_Files"
+    # Save to a CSV file
+    output_dir = os.path.join(os.path.expanduser("~"), "Desktop", "Daily_Discharge_Files")
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate the file path
