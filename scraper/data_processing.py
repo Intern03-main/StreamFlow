@@ -1,6 +1,8 @@
 import time
 from datetime import datetime
 import pandas as pd
+from scraper.pagination import return_to_correct_page
+from scraper.connection import safe_page_goto
 
 
 def scrape_current_page(page, scraper):
@@ -11,27 +13,53 @@ def scrape_current_page(page, scraper):
     if total_years == 0:
         print("[ERROR] No year links found.")
         return
-    print(f"[INFO] Found {total_years} year links. Scraping 20 available...")
+    print(f"[INFO] Found {total_years} year links. Scraping all available...")
 
-    for i in range(total_years):  # Scrape all year links per page
-        try:
-            year_links = page.locator("a[href*='station_daily.aspx']")
-            current_year_link = year_links.nth(i)
+    # Try to resume from the last successfully processed link
+    start_index = get_last_successful_index()  # Fetch the last successful year link index
 
-            print(f"\n[INFO] Clicking year link {i + 1}/{total_years}...")
-            current_year_link.click()
-            page.wait_for_load_state("domcontentloaded")
-            time.sleep(3)
+    for i in range(start_index, total_years):  # Scrape all year links per page starting from the saved index
+        success = False
+        for retry in range(3):
+            try:
+                year_links = page.locator("a[href*='station_daily.aspx']")
+                current_year_link = year_links.nth(i)
 
-            scrape_data(page, scraper)
+                print(f"\n[INFO] Clicking year link {i + 1}/{total_years}, Attempt {retry + 1}/3...")
+                current_year_link.click()
+                page.wait_for_load_state("domcontentloaded")
+                time.sleep(3)
 
-            # Return to correct page after scraping each year link
-            from scraper.pagination import return_to_correct_page
-            return_to_correct_page(page, scraper)
+                scrape_data(page, scraper)
+                save_last_successful_index(i)  # Save the index of the last successful link
+                success = True
+                break  # Break out of retry loop on success
 
-        except Exception as e:
-            print(f"[ERROR] Failed to process year link {i + 1}: {e}")
-            return_to_correct_page(page, scraper)
+            except Exception as e:
+                print(f"[ERROR] Failed to process year link {i + 1} on attempt {retry + 1}: {e}")
+                safe_page_goto(page, scraper.base_url)
+
+        if not success:
+            print(f"[CRITICAL] Skipping year link {i + 1} after multiple failures.")
+
+        # Always return to correct page whether success or not
+        return_to_correct_page(page, scraper)
+
+
+def get_last_successful_index():
+    """Fetches the last successfully processed year link index from a file or memory."""
+    try:
+        with open("last_successful_index.txt", "r") as f:
+            index = int(f.read().strip())
+            return index
+    except FileNotFoundError:
+        return 0  # If file doesn't exist, start from the first link
+
+
+def save_last_successful_index(index):
+    """Saves the last successfully processed year link index to a file."""
+    with open("last_successful_index.txt", "w") as f:
+        f.write(str(index))
 
 
 MAX_RETRIES = 3  # Number of times to wait for the table before reloading
@@ -53,7 +81,7 @@ def scrape_data(page, scraper, reload_attempts=0):
         if not table.count():
             if reload_attempts < MAX_RELOADS:
                 print(f"[ERROR] Table still not found. Reloading page... ({reload_attempts + 1}/{MAX_RELOADS})")
-                page.reload()
+                safe_page_goto(page, page.url)
                 time.sleep(3)  # Wait for page to load
                 return scrape_data(page, scraper, reload_attempts + 1)  # Retry after reload
             else:
