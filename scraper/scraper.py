@@ -3,7 +3,7 @@ from scraper.connection import wait_for_connection
 from scraper.pagination import return_to_correct_page, click_next_page
 from scraper.data_processing import scrape_current_page
 from scraper.utils import save_to_csv
-from scraper.db_connection import create_table, insert_data
+from scraper.db_connection import drop_table, create_table, insert_data
 
 from playwright.sync_api import sync_playwright
 import time
@@ -45,6 +45,7 @@ class TableScraper:
         # Save data to a CSV file
         save_to_csv(self.data)
         
+        drop_table()  # Drop the table after scraping
         create_table()
 
         # Insert scraped data into MySQL database

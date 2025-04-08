@@ -30,18 +30,37 @@ def create_connection():
         print(f"[ERROR] Error connecting to MySQL: {e}")
         return None
 
-
-# Create table if not exists
-def create_table():
-    """Drop existing streamflow_data table and create a new one."""
+# Drop the table if it exists
+def drop_table():
+    """Drop the streamflow_data table if it exists."""
     connection = create_connection()
     if connection is None:
         print("[ERROR] Failed to create database connection.")
         return
 
     drop_table_query = "DROP TABLE IF EXISTS streamflow_data"
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(drop_table_query)
+        connection.commit()
+        print("[INFO] Table 'streamflow_data' dropped successfully.")
+    except Error as e:
+        print(f"[ERROR] Failed to drop table: {e}")
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def create_table():
+    """Create the streamflow_data table if it does not exist."""
+    connection = create_connection()
+    if connection is None:
+        print("[ERROR] Failed to create database connection.")
+        return
+
     create_table_query = """
-    CREATE TABLE streamflow_data (
+    CREATE TABLE IF NOT EXISTS streamflow_data (
         id INT AUTO_INCREMENT PRIMARY KEY,
         station_id VARCHAR(255),
         date DATE,
@@ -51,12 +70,11 @@ def create_table():
 
     try:
         cursor = connection.cursor()
-        cursor.execute(drop_table_query)
         cursor.execute(create_table_query)
         connection.commit()
-        print("[INFO] Dropped and recreated 'streamflow_data' table.")
+        print("[INFO] Table 'streamflow_data' is ready.")
     except Error as e:
-        print(f"[ERROR] Failed to drop/create table: {e}")
+        print(f"[ERROR] Failed to create table: {e}")
     finally:
         cursor.close()
         connection.close()
