@@ -24,7 +24,7 @@ def create_connection():
             database=DB_NAME
         )
         if connection.is_connected():
-            print("[INFO] Connected to MySQL database.")
+            print("[INFO] Successfully connected to database.")
             return connection
     except Error as e:
         print(f"[ERROR] Error connecting to MySQL: {e}")
@@ -44,9 +44,9 @@ def drop_table():
         cursor = connection.cursor()
         cursor.execute(drop_table_query)
         connection.commit()
-        print("[INFO] Table 'streamflow_data' dropped successfully.")
+        print("[INFO] Table 'streamflow_data' is ready.")
     except Error as e:
-        print(f"[ERROR] Failed to drop table: {e}")
+        print(f"[ERROR] Failed to drop table, table's not ready!: {e}")
     finally:
         cursor.close()
         connection.close()
@@ -62,7 +62,7 @@ def create_table():
     create_table_query = """
     CREATE TABLE IF NOT EXISTS streamflow_data (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        station_id VARCHAR(255),
+        station_id VARCHAR(100),
         date DATE,
         discharge FLOAT
     )
