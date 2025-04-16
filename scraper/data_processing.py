@@ -4,9 +4,10 @@ import pandas as pd
 from scraper.pagination import return_to_correct_page
 from scraper.connection import safe_page_goto
 
+successfully_scraped_links = set()  # In-memory cache for successful year links
+
 
 def scrape_current_page(page, scraper):
-    """Scrapes all year links available on the current page."""
     year_links = page.locator("a[href*='station_daily.aspx']")
     total_years = year_links.count()
 
@@ -15,51 +16,39 @@ def scrape_current_page(page, scraper):
         return
     print(f"[INFO] Found {total_years} year links. Scraping all available...")
 
-    # Try to resume from the last successfully processed link
-    start_index = get_last_successful_index()  # Fetch the last successful year link index
+    for i in range(total_years):
+        try:
+            year_links = page.locator("a[href*='station_daily.aspx']")
+            current_year_link = year_links.nth(i)
 
-    for i in range(start_index, total_years):  # Scrape all year links per page starting from the saved index
-        success = False
-        for retry in range(3):
-            try:
-                year_links = page.locator("a[href*='station_daily.aspx']")
-                current_year_link = year_links.nth(i)
+            # Skip year link if already scraped
+            if i in successfully_scraped_links:
+                print(f"[INFO] Skipping year link {i + 1} as it was already scraped.")
+                continue
 
-                print(f"\n[INFO] Clicking year link {i + 1}/{total_years}, Attempt {retry + 1}/3...")
-                current_year_link.click()
-                page.wait_for_load_state("domcontentloaded")
-                time.sleep(3)
+            # Scraping this year link
+            print(f"[INFO] Clicking year link {i + 1}/{total_years}...")
+            current_year_link.click()
+            page.wait_for_load_state("domcontentloaded")
+            time.sleep(3)
 
-                scrape_data(page, scraper)
-                save_last_successful_index(i)  # Save the index of the last successful link
-                success = True
-                break  # Break out of retry loop on success
+            success = scrape_data(page, scraper)
 
-            except Exception as e:
-                print(f"[ERROR] Failed to process year link {i + 1} on attempt {retry + 1}: {e}")
-                safe_page_goto(page, scraper.base_url)
+            # Keep retrying the year link until successful
+            while not success:
+                print(f"[INFO] Retrying year link {i + 1}...")
+                success = scrape_data(page, scraper)
+                time.sleep(3)  # Wait before retrying
 
-        if not success:
-            print(f"[CRITICAL] Skipping year link {i + 1} after multiple failures.")
+            # Successfully scraped, add to the cache
+            successfully_scraped_links.add(i)
 
-        # Always return to correct page whether success or not
-        return_to_correct_page(page, scraper)
+            # Return to the correct page for the next link
+            return_to_correct_page(page, scraper)
 
-
-def get_last_successful_index():
-    """Fetches the last successfully processed year link index from a file or memory."""
-    try:
-        with open("last_successful_index.txt", "r") as f:
-            index = int(f.read().strip())
-            return index
-    except FileNotFoundError:
-        return 0  # If file doesn't exist, start from the first link
-
-
-def save_last_successful_index(index):
-    """Saves the last successfully processed year link index to a file."""
-    with open("last_successful_index.txt", "w") as f:
-        f.write(str(index))
+        except Exception as e:
+            print(f"[ERROR] Failed to process year link {i + 1}: {e}")
+            return_to_correct_page(page, scraper)
 
 
 MAX_RETRIES = 3  # Number of times to wait for the table before reloading
@@ -69,9 +58,11 @@ MAX_RELOADS = 3  # Maximum times to reload the page
 def scrape_data(page, scraper, reload_attempts=0):
     """Extracts data from the table while handling empty cells properly."""
     try:
+        success = False
         for attempt in range(MAX_RETRIES):
             table = page.locator("table.mystyle tbody")
             if table.count():
+                success = True
                 break  # Table found, proceed with scraping
             print(f"[WARNING] Table not found. Retrying... ({attempt + 1}/{MAX_RETRIES})")
             time.sleep(2)  # Wait before retrying
@@ -86,7 +77,7 @@ def scrape_data(page, scraper, reload_attempts=0):
                 return scrape_data(page, scraper, reload_attempts + 1)  # Retry after reload
             else:
                 print("[CRITICAL] Table not found after multiple reloads. Manual intervention needed.")
-                return  # Prevent infinite loop
+                return False  # Return False after multiple failures
 
         # Extract headers and month names
         rows = table.locator("tr")
@@ -144,5 +135,8 @@ def scrape_data(page, scraper, reload_attempts=0):
         # Add the current year link data to main scraper data
         scraper.data.extend(current_data)
 
+        return True  # Return True if scraping was successful
+
     except Exception as e:
         print(f"[ERROR] Failed to scrape data: {e}")
+        return False  # Return False if there was any failure

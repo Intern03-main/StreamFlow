@@ -13,7 +13,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
 
-# Create connection to MySQL
+# Create connection to MySQL, make sure to have database named "stream_flow"
 def create_connection():
     """Establish a connection to the MySQL database."""
     try:
@@ -29,6 +29,7 @@ def create_connection():
     except Error as e:
         print(f"[ERROR] Error connecting to MySQL: {e}")
         return None
+
 
 # Drop the table if it exists
 def drop_table():

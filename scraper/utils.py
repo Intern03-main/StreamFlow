@@ -2,6 +2,11 @@ import os
 import pandas as pd
 from datetime import datetime
 
+last_successful_index = 0
+last_failed_index = None
+
+cache = {}
+
 
 def save_to_csv(data):
     """Saves the scraped data to a CSV file in the 'Daily_Discharge_Files' directory."""

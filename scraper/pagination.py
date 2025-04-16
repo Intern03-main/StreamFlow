@@ -8,7 +8,7 @@ def safe_page_goto(page, url, wait_time=10):
     while True:
         try:
             print(f"[INFO] Loading {url}... (Attempt {attempt})")
-            page.goto(url, timeout=60000, wait_until="load")  # Set longer timeout (60s)
+            page.goto(url, timeout=60000, wait_until="load")
             page.wait_for_load_state("networkidle")  # Wait until all network requests are done
             print("[INFO] Page loaded successfully!")
             return  # Exit loop once successful
@@ -49,7 +49,7 @@ def return_to_correct_page(page, scraper):
     current_page = page.evaluate("$('#tbstations').DataTable().page.info().page + 1")
 
     if current_page == scraper.current_page_number:
-        print(f"[INFO] Already on the correct page {scraper.current_page_number}. No navigation needed.")
+        print(f"[INFO] Already on the correct page {scraper.current_page_number}. No navigation needed.\n")
         return
 
     if scraper.current_page_number <= total_pages:
