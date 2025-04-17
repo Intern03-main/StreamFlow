@@ -8,7 +8,7 @@ def wait_for_connection(url, page):
         print("[WARNING] Internet disconnected. Retrying...")
         time.sleep(10)
 
-    print("[INFO] Internet connection restored. Reloading page...")
+    print("[INFO] Internet connection present. Reloading page...")
     safe_page_goto(page, url)
 
 

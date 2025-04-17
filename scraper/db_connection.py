@@ -3,7 +3,7 @@ from mysql.connector import Error
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (if any)
+# Load environment variables from .env file
 load_dotenv()
 
 # DB Credentials
