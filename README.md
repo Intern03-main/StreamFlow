@@ -1,7 +1,7 @@
 
 # Streamflow Data Scraper
 
-This project is a web scraper built using **Playwright** in Python. It extracts **daily streamflow data** from a government website with multiple layers of pagination.
+This project is a web scraper built using **Playwright** in Python. It extracts **daily streamflow data** from DPWH's website (Streamflow Management System).
 
 ---
 
