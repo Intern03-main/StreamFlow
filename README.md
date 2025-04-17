@@ -42,7 +42,7 @@ python main.py
 
 ---
 
-Columns in stored .csv file
+## Columns in stored .csv file
 
 | Column         | Description                                                   |
 |----------------|---------------------------------------------------------------|
