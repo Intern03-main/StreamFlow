@@ -34,8 +34,9 @@ This project is a web scraper built using **Playwright** in Python. It extracts 
 pip install -r requirements.txt
 playwright install
 ```
-
-2. Run the scraper:
+2. Make sure that the .env file contents match the MySQL database credentials you're using.
+   
+3. Run the scraper:
 ```bash
 python main.py
 ```
