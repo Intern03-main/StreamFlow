@@ -37,7 +37,7 @@ playwright install
 2. Make sure that the .env file contents match the MySQL database credentials you're using.
    
 3. Run the scraper:
-```bash
+```py
 python main.py
 ```
 
