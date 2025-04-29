@@ -43,6 +43,14 @@ python main.py
 
 ---
 
+## Station Names and its Coordinates(Latitude/Longhitude) GDrive Link
+```bash
+https://docs.google.com/spreadsheets/d/1wP71_bU1YieCch77IrSiCY3lSf1OI5j6/edit?usp=sharing&ouid=100929269929134209125&rtpof=true&sd=true
+```
+
+
+---
+
 ## Columns in the stored .csv file
 
 | Column         | Description                                                   |
